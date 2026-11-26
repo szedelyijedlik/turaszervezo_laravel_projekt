@@ -30,12 +30,12 @@ class StoreToursRequest extends FormRequest
     {
         return [
             "destination" => "required|string|max:100",
-            "description" => "sometimes|string|max:1000",
+            "description" => "sometimes|string|max:1000|nullable",
             "starts_on" => ['required', 'date', Tours::validateStartOn(...)],
             "days" => "required|integer|between:1,14",
             "difficulty" => ["required", Rule::in(TourDifficulty::cases())],
             "price_per_person" => "required|integer|min:0",
-            "free_places" => "sometimes|integer|between:0,60"
+            "free_places" => "sometimes|integer|between:0,60|nullable"
         ];
     }
 }

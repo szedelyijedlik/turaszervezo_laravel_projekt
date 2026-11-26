@@ -29,12 +29,12 @@ class UpdateToursRequest extends FormRequest
     {
         return [
             "destination" => "sometimes|string|max:100",
-            "description" => "sometimes|string|max:1000",
+            "description" => "sometimes|string|max:1000|nullable",
             "starts_on" => ['sometimes', 'date', Tours::validateStartOn(...)],
             "days" => "sometimes|integer|between:1,14",
             "difficulty" => ["sometimes", Rule::in(TourDifficulty::cases())],
             "price_per_person" => "sometimes|integer|min:0",
-            "free_places" => "sometimes|integer|between:0,60"
+            "free_places" => "sometimes|integer|between:0,60|nullable"
         ];;
     }
 }
