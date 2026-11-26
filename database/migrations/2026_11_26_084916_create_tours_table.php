@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedInteger("days");
             $table->string("difficulty", 10);
             $table->unsignedInteger("price_per_person");
-            $table->unsignedInteger("free_places");
+            $table->unsignedInteger("free_places")->default(10);
             $table->timestamps();
         });
     }

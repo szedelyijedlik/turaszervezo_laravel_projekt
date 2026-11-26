@@ -2,8 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\TourDifficulty;
+use App\Models\Tours;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+
+use const App\Http\Controllers\DEBUG;
 
 class StoreToursRequest extends FormRequest
 {
@@ -12,7 +18,7 @@ class StoreToursRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return DEBUG ? true : false;
     }
 
     /**
@@ -23,7 +29,13 @@ class StoreToursRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            "destination" => "required|string|max:100",
+            "description" => "sometimes|string|max:1000|nullable",
+            "starts_on" => ['required', 'date', Tours::validateStartOn(...)],
+            "days" => "required|integer|between:1,14",
+            "difficulty" => ["required", Rule::in(TourDifficulty::cases())],
+            "price_per_person" => "required|integer|min:0",
+            "free_places" => "sometimes|integer|between:0,60|nullable"
         ];
     }
 }
