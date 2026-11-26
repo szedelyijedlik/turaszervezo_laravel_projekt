@@ -1,5 +1,5 @@
 @base_url = http://localhost:8000/api/tours
-@tour_id = 1
+@tour_id = 20
 
 ### List tours
 GET {{base_url}}
@@ -57,4 +57,8 @@ Accept: application/json
 
 ###
 GET {{base_url}}/{{tour_id}}/participants?per_page=3
+Accept: application/json
+
+###
+GET {{base_url}}/{{tour_id}}/revenue
 Accept: application/json
