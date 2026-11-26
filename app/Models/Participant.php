@@ -25,6 +25,6 @@ class Participant extends Model
      */
     public function tour(): BelongsTo
     {
-        return $this->belongsTo(Tours::class);
+        return $this->belongsTo(Tours::class, "tours_id", "id");
     }
 }
