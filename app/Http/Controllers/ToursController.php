@@ -13,6 +13,7 @@ use Illuminate\Validation\Rule;
 
 const DEFAULT_PER_PAGE = 15;
 const DEBUG = true;
+const USD_TO_HUF = 338.755509; # LAST UPDATED 2026-11-26, can be replaced with currency api
 
 class ToursController extends Controller
 {
@@ -120,7 +121,9 @@ class ToursController extends Controller
      */
     public function show(Tours $tour)
     {
-        return TourResource::make($tour->load("participants"));
+        $tour->load("participants");
+        $tour->loadCount("participants");
+        return TourResource::make($tour);
     }
 
     /**
@@ -179,7 +182,8 @@ class ToursController extends Controller
 
         return response()->json([
             "sum_headcount" => $sum_headcount,
-            "calulated_revanue" => $calulated_revanue
+            "calulated_revanue_ft" => $calulated_revanue,
+            "calulated_revanue_dollar" => round($calulated_revanue / USD_TO_HUF, 0)
         ]);
     }
 }
