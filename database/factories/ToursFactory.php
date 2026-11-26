@@ -57,7 +57,19 @@ class ToursFactory extends Factory
         return [
             "starts_on" => fake()->dateTimeBetween("+3 days", "+30 days")->format('Y-m-d'),
             "description" => fake()->optional(0.7)->randomElement(ToursFactory::$mockDescriptions),
-            "destination" => fake()->randomElement(ToursFactory::$mockDesinations),
+            "destination" => function() {
+                static $remaining = [];
+
+                if ($remaining === [])
+                {
+                    $remaining = array_values(
+                        array_unique(ToursFactory::$mockDesinations)
+                    );
+                    shuffle($remaining);
+                }
+
+                return array_pop($remaining);
+            },
             "days" => fake()->numberBetween(1, 5),
             "difficulty" => fake()->randomElement(TourDifficulty::cases()),
             "price_per_person" => fake()->randomElement(ToursFactory::$mockPrice),
