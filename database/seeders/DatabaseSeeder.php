@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Tours;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -24,7 +23,8 @@ class DatabaseSeeder extends Seeder
         // ]);
 
         $this->call([
-            ToursSeeder::class
+            ToursSeeder::class,
+            ParticipantSeeder::class,
         ]);
     }
 }
