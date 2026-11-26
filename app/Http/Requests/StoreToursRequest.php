@@ -7,6 +7,8 @@ use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+use const App\Http\Controllers\DEBUG;
+
 class StoreToursRequest extends FormRequest
 {
     /**
@@ -14,7 +16,7 @@ class StoreToursRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return DEBUG ? true : false;
     }
 
     /**
@@ -25,7 +27,7 @@ class StoreToursRequest extends FormRequest
     public function rules(): array
     {
         return [
-            "desination" => "required|string|max:100",
+            "destination" => "required|string|max:100",
             "description" => "sometimes|string|max:1000",
             "starts_on" => 'required|date|after:today',
             "days" => "required|integer|between:1,14",
