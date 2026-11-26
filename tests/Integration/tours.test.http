@@ -1,19 +1,98 @@
 @base_url = http://localhost:8000/api/tours
 @tour_id = 1
+@missing_tour_id = 999999
+# Set this to a seeded tour that already has at least one participant.
+@booked_tour_id = 2
 
-### List tours
+### LIST: all tours
+# Expected: 200
+# Check: response includes the participant count for each tour.
 GET {{base_url}}
 Accept: application/json
 
-### List with filters, sorting, and pagination
-GET {{base_url}}?search=bakony&difficulty=easy&from=2026-12-01&max_price=10000&available=1&sort=-days&per_page=10
+### LIST: combined filters and sorting
+# Expected: 200
+# Check: results match every filter; sort is descending by days.
+GET {{base_url}}?search=bakony&difficulty=easy&from=2026-12-01&max_price=10000&sort=-days&per_page=10
 Accept: application/json
 
-### Show a tour
+### LIST: search destination
+# Expected: 200
+# Check: only tours whose destination contains "bükk" should match.
+GET {{base_url}}?search=bükk
+Accept: application/json
+
+### LIST: filter by difficulty
+# Expected: 200
+# Check: every result has difficulty "medium".
+GET {{base_url}}?difficulty=medium
+Accept: application/json
+
+### LIST: filter by start date
+# Expected: 200
+# Check: no result starts before 2026-12-01.
+GET {{base_url}}?from=2026-12-01
+Accept: application/json
+
+### LIST: filter by maximum price
+# Expected: 200
+# Check: every result has price_per_person <= 10000.
+GET {{base_url}}?max_price=10000
+Accept: application/json
+
+### LIST: only tours with available places
+# Expected: 200
+# Check: every result has free_places greater than 0.
+GET {{base_url}}?available=1
+Accept: application/json
+
+### LIST: sort by price, ascending
+# Expected: 200
+# Check: price_per_person is in ascending order.
+GET {{base_url}}?sort=price_per_person
+Accept: application/json
+
+### LIST: sort by start date, descending
+# Expected: 200
+# Check: starts_on is in descending order.
+GET {{base_url}}?sort=-starts_on
+Accept: application/json
+
+### LIST: pagination preserves filters in links
+# Expected: 200
+# Check: response has pagination links; following one keeps search and difficulty.
+GET {{base_url}}?search=bükk&difficulty=easy&per_page=1
+Accept: application/json
+
+### LIST: minimum page size
+# Expected: 200
+GET {{base_url}}?per_page=1
+Accept: application/json
+
+### LIST: maximum valid page size
+# Expected: 200
+GET {{base_url}}?per_page=100
+Accept: application/json
+
+### LIST: page size too large
+# Expected: 422 if invalid query parameters are validated by the API.
+GET {{base_url}}?per_page=101
+Accept: application/json
+
+### SHOW: existing tour and its participants
+# Expected: 200
+# Check: response includes the tour's participants.
 GET {{base_url}}/{{tour_id}}
 Accept: application/json
 
-### Create a tour
+### SHOW: unknown tour
+# Expected: 404 with the API's standard JSON error format.
+GET {{base_url}}/{{missing_tour_id}}
+Accept: application/json
+
+### CREATE: all supported fields
+# Expected: 201
+# Check: response contains the newly created tour.
 POST {{base_url}}
 Accept: application/json
 Content-Type: application/json
@@ -28,7 +107,9 @@ Content-Type: application/json
   "free_places": 12
 }
 
-### Create a tour without optional fields
+### CREATE: omit optional fields
+# Expected: 201
+# Check: description and free_places may be omitted.
 POST {{base_url}}
 Accept: application/json
 Content-Type: application/json
@@ -41,7 +122,168 @@ Content-Type: application/json
   "price_per_person": 8500
 }
 
-### Partially update a tour
+### CREATE: description can be null
+# Expected: 201
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Zemplén",
+  "description": null,
+  "starts_on": "2026-12-22",
+  "days": 1,
+  "difficulty": "hard",
+  "price_per_person": 0,
+  "free_places": 0
+}
+
+### CREATE: missing required destination
+# Expected: 422 with a destination validation error.
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "starts_on": "2026-12-15",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": 10000
+}
+
+### CREATE: destination exceeds 100 characters
+# Expected: 422 with a destination validation error.
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "This destination name is intentionally much longer than the allowed maximum length of one hundred characters so that the length validation should reject it.",
+  "starts_on": "2026-12-15",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": 10000
+}
+
+### CREATE: description exceeds 1000 characters
+# Expected: 422 with a description validation error.
+# Replace the value below with a string longer than 1000 characters when testing this boundary.
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bükk",
+  "description": "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. NASDASDSA",
+  "starts_on": "2026-12-15",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": 10000
+}
+
+### CREATE: start date is today
+# Expected: 422 with your custom starts_on error message.
+# Update this date when running the test on a different day.
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bakony",
+  "starts_on": "2026-11-26",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": 10000
+}
+
+### CREATE: start date is in the past
+# Expected: 422 with your custom starts_on error message.
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bakony",
+  "starts_on": "2026-11-25",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": 10000
+}
+
+### CREATE: days is below minimum
+# Expected: 422
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bükk",
+  "starts_on": "2026-12-15",
+  "days": 0,
+  "difficulty": "easy",
+  "price_per_person": 10000
+}
+
+### CREATE: days is above maximum
+# Expected: 422
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bükk",
+  "starts_on": "2026-12-15",
+  "days": 15,
+  "difficulty": "easy",
+  "price_per_person": 10000
+}
+
+### CREATE: invalid difficulty
+# Expected: 422
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bükk",
+  "starts_on": "2026-12-15",
+  "days": 3,
+  "difficulty": "extreme",
+  "price_per_person": 10000
+}
+
+### CREATE: negative price
+# Expected: 422
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bükk",
+  "starts_on": "2026-12-15",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": -1
+}
+
+### CREATE: free places exceeds maximum
+# Expected: 422
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bükk",
+  "starts_on": "2026-12-15",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": 10000,
+  "free_places": 61
+}
+
+### UPDATE: partially update an existing tour
+# Expected: 200
+# Check: only the supplied fields change.
 PATCH {{base_url}}/{{tour_id}}
 Accept: application/json
 Content-Type: application/json
@@ -51,14 +293,56 @@ Content-Type: application/json
   "free_places": 8
 }
 
-### Delete a tour
-DELETE {{base_url}}/{{tour_id}}
+### UPDATE: invalid field value
+# Expected: 422
+PATCH {{base_url}}/{{tour_id}}
 Accept: application/json
+Content-Type: application/json
 
-###
+{
+  "days": 0
+}
+
+### UPDATE: unknown tour
+# Expected: 404 with the API's standard JSON error format.
+PATCH {{base_url}}/{{missing_tour_id}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "price_per_person": 11000
+}
+
+### PARTICIPANTS: list newest first, with pagination
+# Expected: 200
+# Check: newest participants appear first; response includes pagination data.
 GET {{base_url}}/{{tour_id}}/participants?per_page=3
 Accept: application/json
 
-###
+### PARTICIPANTS: unknown tour
+# Expected: 404
+GET {{base_url}}/{{missing_tour_id}}/participants
+Accept: application/json
+
+### REVENUE: existing tour
+# Expected: 200
+# Check: revenue matches the API's documented calculation.
 GET {{base_url}}/{{tour_id}}/revenue
+Accept: application/json
+
+### REVENUE: unknown tour
+# Expected: 404
+GET {{base_url}}/{{missing_tour_id}}/revenue
+Accept: application/json
+
+### DELETE: tour with participants
+# Expected: 409 Conflict.
+# Set @booked_tour_id to a tour that already has participants.
+DELETE {{base_url}}/{{booked_tour_id}}
+Accept: application/json
+
+### DELETE: tour without participants
+# Expected: 204 No Content.
+# Use an existing tour with no participants; this permanently deletes it.
+DELETE {{base_url}}/20
 Accept: application/json
