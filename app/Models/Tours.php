@@ -14,12 +14,24 @@ class Tours extends Model
     use HasFactory;
 
     /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'starts_on' => 'date:Y-m-d',
+        ];
+    }
+
+    /**
      * Get all of the participants for the Tours
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function participants(): HasMany
     {
-        return $this->hasMany(Participant::class);
+        return $this->hasMany(Participant::class, "tour_id", "id");
     }
 }
