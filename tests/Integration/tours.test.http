@@ -1,0 +1,56 @@
+@base_url = http://localhost:8000/api/tours
+@tour_id = 1
+
+### List tours
+GET {{base_url}}
+Accept: application/json
+
+### List with filters, sorting, and pagination
+GET {{base_url}}?search=bükk&difficulty=medium&from=2026-12-01&max_price=10000&available=1&sort=-days&per_page=10
+Accept: application/json
+
+### Show a tour
+GET {{base_url}}/{{tour_id}}
+Accept: application/json
+
+### Create a tour
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Bükk",
+  "description": "A túra leírása.",
+  "starts_on": "2026-12-15",
+  "days": 3,
+  "difficulty": "easy",
+  "price_per_person": 10000,
+  "free_places": 12
+}
+
+### Create a tour without optional fields
+POST {{base_url}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "destination": "Mátra",
+  "starts_on": "2026-12-20",
+  "days": 2,
+  "difficulty": "medium",
+  "price_per_person": 8500
+}
+
+### Partially update a tour
+PATCH {{base_url}}/{{tour_id}}
+Accept: application/json
+Content-Type: application/json
+
+{
+  "price_per_person": 11000,
+  "free_places": 8
+}
+
+### Delete a tour
+DELETE {{base_url}}/{{tour_id}}
+Accept: application/json
