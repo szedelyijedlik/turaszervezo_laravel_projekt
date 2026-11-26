@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Participant;
 use App\Http\Requests\StoreParticipantRequest;
 use App\Http\Requests\UpdateParticipantRequest;
+use App\Http\Resources\ParticipantResource;
+use App\Models\Participant;
 
 class ParticipantController extends Controller
 {
@@ -13,7 +14,9 @@ class ParticipantController extends Controller
      */
     public function index()
     {
-        //
+        $participants = Participant::with('tour')->latest()->paginate();
+
+        return ParticipantResource::collection($participants);
     }
 
     /**
@@ -21,7 +24,9 @@ class ParticipantController extends Controller
      */
     public function store(StoreParticipantRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        return Participant::create($validated);
     }
 
     /**
@@ -29,7 +34,7 @@ class ParticipantController extends Controller
      */
     public function show(Participant $participant)
     {
-        //
+        return ParticipantResource::make($participant->load('tour'));
     }
 
     /**
@@ -37,7 +42,11 @@ class ParticipantController extends Controller
      */
     public function update(UpdateParticipantRequest $request, Participant $participant)
     {
-        //
+        $participant->update($request->validated());
+
+        $participant->load('tour');
+
+        return ParticipantResource::make($participant);
     }
 
     /**
@@ -45,6 +54,8 @@ class ParticipantController extends Controller
      */
     public function destroy(Participant $participant)
     {
-        //
+        $participant->delete();
+
+        return response()->noContent();
     }
 }

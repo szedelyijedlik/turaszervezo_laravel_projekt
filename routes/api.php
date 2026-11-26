@@ -10,6 +10,6 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::apiResource('tours', ToursController::class);
-Route::get('tours/{tour}/participants', [ToursController::class]);
+Route::get('tours/{tour}/participants', [ToursController::class, 'participants']);
 
 Route::apiResource('participants', ParticipantController::class);

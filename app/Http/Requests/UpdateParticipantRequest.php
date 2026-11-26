@@ -26,7 +26,6 @@ class UpdateParticipantRequest extends FormRequest
             'tour_id' => 'exists:tours,id',
             'name' => 'string|max:100',
             'phone' => 'string|max:30',
-            'persons' => 'required|integer|min:1',
         ];
     }
 }
