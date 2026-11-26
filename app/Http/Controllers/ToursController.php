@@ -171,4 +171,15 @@ class ToursController extends Controller
                 ->withQueryString()
         );
     }
+
+    public function calculate_revenue(Tours $tour)
+    {
+        $sum_headcount = $tour->participants()->sum("persons");
+        $calulated_revanue = round($tour->price_per_person * $sum_headcount, 0);
+
+        return response()->json([
+            "sum_headcount" => $sum_headcount,
+            "calulated_revanue" => $calulated_revanue
+        ]);
+    }
 }
