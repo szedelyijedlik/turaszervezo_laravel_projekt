@@ -6,11 +6,13 @@ use App\Enums\TourDifficulty;
 use App\Models\Tours;
 use App\Http\Requests\StoreToursRequest;
 use App\Http\Requests\UpdateToursRequest;
+use App\Http\Resources\ParticipantResource;
 use App\Http\Resources\TourResource;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 const DEFAULT_PER_PAGE = 15;
+const DEBUG = true;
 
 class ToursController extends Controller
 {
@@ -26,6 +28,7 @@ class ToursController extends Controller
             "difficulty" => ["string", Rule::in(TourDifficulty::cases()), "max:10"],
             "from" => "date",
             "max_price" => "integer|min:0",
+            "max_days" => "integer|min:1",
             "available" => "bool",
             "sort" => Rule::in([
                 "id",
@@ -63,6 +66,10 @@ class ToursController extends Controller
                         $tourQuery->where('price_per_person', '<=', $filter);
                         break;
 
+                    case 'max_days':
+                        $tourQuery->where('days', "<=", $filter);
+                        break;
+
                     case 'available':
                         if ($filter) {
                             $tourQuery->where('free_places', '>', 0);
@@ -72,7 +79,7 @@ class ToursController extends Controller
             }
         }
 
-        if ($sort_by = $request->input("sort")) {
+        if ($sort = $request->input("sort")) {
             $sort_by_direction = function (string $value) use ($tourQuery) {
                 $direction = "asc";
                 if (str_contains($value, "-")) {
@@ -83,10 +90,12 @@ class ToursController extends Controller
                 $tourQuery->orderBy($value, $direction);
             };
 
-            $sort_by_direction($sort_by);
+            $sort_by_direction($sort);
         } else {
             $tourQuery->orderBy("starts_on", "asc");
         }
+
+        $tourQuery->withCount("participants");
 
         $per_page = $request->input("per_page", DEFAULT_PER_PAGE);
         return TourResource::collection(
@@ -109,24 +118,57 @@ class ToursController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Tours $tours)
+    public function show(Tours $tour)
     {
-        return TourResource::make($tours);
+        return TourResource::make($tour->load("participants"));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateToursRequest $request, Tours $tours)
+    public function update(UpdateToursRequest $request, Tours $tour)
     {
-        //
+        $tour->update($request->validated());
+
+        return TourResource::make($tour->refresh());
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Tours $tours)
+    public function destroy(int $id)
     {
-        //
+        $tour = Tours::find($id);
+
+        if (!$tour) {
+            return response()->json([
+                "message" => "The requested resource was not found. (id: $id)"
+            ], 404);
+        }
+
+        if ($tour->participants()->count() > 0)
+            return response()->json([
+                "message" => "Cannot delete a tour with active participants"
+            ], 409);
+
+        $tour->delete();
+
+        return response()->noContent();
+    }
+
+    public function participants(Tours $tour, Request $request)
+    {
+        $request->validate([
+            'per_page' => ['sometimes', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $per_page = $request->input("per_page", DEFAULT_PER_PAGE);
+
+        return ParticipantResource::collection(
+            $tour->participants()
+                ->latest()
+                ->paginate($per_page)
+                ->withQueryString()
+        );
     }
 }
