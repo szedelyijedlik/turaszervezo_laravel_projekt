@@ -6,7 +6,7 @@ GET {{base_url}}
 Accept: application/json
 
 ### List with filters, sorting, and pagination
-GET {{base_url}}?search=bükk&difficulty=medium&from=2026-12-01&max_price=10000&available=1&sort=-days&per_page=10
+GET {{base_url}}?search=bakony&difficulty=easy&from=2026-12-01&max_price=10000&available=1&sort=-days&per_page=10
 Accept: application/json
 
 ### Show a tour
@@ -53,4 +53,8 @@ Content-Type: application/json
 
 ### Delete a tour
 DELETE {{base_url}}/{{tour_id}}
+Accept: application/json
+
+###
+GET {{base_url}}/{{tour_id}}/participants?per_page=3
 Accept: application/json
